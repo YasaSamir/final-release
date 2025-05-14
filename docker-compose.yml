@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - AI_SERVICE_URL=http://ai-service:5000
+    depends_on:
+      - ai-service
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+
+  ai-service:
+    build: ./ai_service
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ai_service:/app
+    networks:
+      - app-network
+
+  frontend:
+    build: ./project
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
