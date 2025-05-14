@@ -1,0 +1,39 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class AuthService {
+  static Future<List<String>> getCurrentUserRoles() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) return [];
+
+      // Fetch the user's roles from the user_roles table
+      final response = await Supabase.instance.client
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .execute(); // Execute the query
+
+      // Check if the response has data and map it to a list of roles
+      if (response.data != null && response.data.isNotEmpty) {
+        return (response.data as List<dynamic>)
+            .map((item) => item['role'] as String)
+            .toList();
+      } else {
+        print('Roles not found for user: $userId');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching user roles: $e');
+      return [];
+    }
+  }
+
+  static Future<void> logout() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (e) {
+      print('Error during logout: $e');
+      rethrow;
+    }
+  }
+}

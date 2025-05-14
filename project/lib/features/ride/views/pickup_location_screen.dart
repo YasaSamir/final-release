@@ -1,0 +1,241 @@
+// import 'package:flutter/material.dart';
+// import 'package:project/routes/app_router.dart';
+//
+// import '../../../core/widgets/menu_overlay.dart';
+// import '../../rider/home/ride_progress.dart';
+// // import 'package:google_maps_flutter/google_maps_flutter.dart';
+//
+// class PickupLocationScreen extends StatelessWidget {
+//   const PickupLocationScreen({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return SafeArea(
+//       child: Scaffold(
+//         backgroundColor: Colors.black,
+//         appBar: AppBar(
+//           backgroundColor: Color(0xff535AFF),
+//           elevation: 0,
+//           leading: Padding(
+//             padding: const EdgeInsets.only(left: 25),
+//             child: IconButton(
+//               icon: const Icon(Icons.menu, color: Colors.white, size: 30),
+//               onPressed: (){
+//                 showGeneralDialog(
+//                   context: context,
+//                   barrierDismissible: true, // Close on tap outside
+//                   barrierLabel: "Menu",
+//                   transitionDuration: Duration(milliseconds: 300),
+//                   pageBuilder: (context, animation, secondaryAnimation) {
+//                     return MenuOverlay();
+//                   },
+//                   transitionBuilder: (context, animation, secondaryAnimation, child) {
+//                     return SlideTransition(
+//                       position: Tween<Offset>(
+//                         begin: Offset(-1.0, 0.0), // Start off-screen (left)
+//                         end: Offset(0.0, 0.0), // End at normal position
+//                       ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOut)),
+//                       child: child,
+//                     );
+//                   },
+//                 );
+//               },
+//             ),
+//           ),
+//         ),
+//         body: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             // Blue section for location permission prompt
+//             Container(
+//               padding: const EdgeInsets.symmetric(horizontal: 30),
+//               color: Color(0xff535AFF),
+//               width: double.infinity,
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   const Text(
+//                     "To find your pickup location\nautomatically, turn on\nlocation services",
+//                     style: TextStyle(
+//                       fontSize: 30,
+//                       color: Colors.white,
+//                       fontWeight: FontWeight.w500,
+//                       fontFamily: 'Roboto',
+//                     ),
+//                   ),
+//                   const SizedBox(height: 10),
+//                   ElevatedButton(
+//                     onPressed: () {
+//                       // Handle location permission request
+//                     },
+//                     style: ElevatedButton.styleFrom(
+//                       backgroundColor: Colors.black,
+//                       padding: const EdgeInsets.symmetric(
+//                         horizontal: 16,
+//                         vertical: 10,
+//                       ),
+//                     ),
+//                     child: const Text(
+//                       "Turn on location",
+//                       style: TextStyle(color: Colors.white),
+//                     ),
+//                   ),
+//                   SizedBox(height: 25),
+//                 ],
+//               ),
+//             ), // Black section below
+//             Expanded(
+//               child: Container(
+//                 padding: const EdgeInsets.all(16),
+//                 decoration: const BoxDecoration(
+//                   color: Colors.black,
+//                   borderRadius: BorderRadius.only(
+//                     topLeft: Radius.circular(20),
+//                     topRight: Radius.circular(20),
+//                   ),
+//                 ),
+//                 child: Padding(
+//                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       // Ride & Package Options
+//                       Row(
+//                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//                         children: [
+//                           OptionCard(onClick: (){
+//                             Navigator.of(context).pushNamed(AppRoutes.pickupPoint);
+//                           },img: 'assets/icon/car.png', text: 'ride'),
+//                           OptionCard(
+//                             onClick: (){
+//                               Navigator.of(context).pushNamed(AppRoutes.packageDelivery);
+//                             },
+//                             img: 'assets/icon/package.png',
+//                             text: 'package',
+//                           ),
+//                         ],
+//                       ),
+//                       const SizedBox(height: 16),
+//                       TextButton(
+//                         onPressed: () {
+//                           // Handle button press here, e.g., navigate to a map screen
+//                           // or perform a search based on the entered text.
+//                         },
+//                         style: TextButton.styleFrom(
+//                           padding: EdgeInsets.zero, // Remove default padding
+//                           shape: RoundedRectangleBorder(
+//                             borderRadius: BorderRadius.circular(
+//                               8,
+//                             ), // Match TextField's borderRadius
+//                           ),
+//                         ),
+//                         child: TextButton(
+//                           onPressed: () {
+//                             Navigator.of(
+//                               context,
+//                             ).pushNamed(AppRoutes.pickupPoint);
+//                           }, // Ensures it behaves like a normal TextField
+//                           style: TextButton.styleFrom(
+//                             padding: EdgeInsets.zero, // Removes extra padding
+//                           ),
+//                           child: Container(
+//                             width: double.infinity,
+//                             padding: EdgeInsets.symmetric(
+//                               horizontal: 16,
+//                               vertical: 12,
+//                             ),
+//                             decoration: BoxDecoration(
+//                               color: Colors.grey[900],
+//                               borderRadius: BorderRadius.circular(8),
+//                             ),
+//                             child: Text(
+//                               "Enter pickup point",
+//                               style: TextStyle(
+//                                 color: Colors.white,
+//                                 fontSize: 24,
+//                                 fontFamily: 'Roboto',
+//                                 fontWeight: FontWeight.w500,
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                       const SizedBox(height: 24),
+//                       const Text(
+//                         "Around you",
+//                         style: TextStyle(
+//                           fontSize: 22,
+//                           color: Colors.white,
+//                           fontWeight: FontWeight.w500,
+//                         ),
+//                       ),
+//                       const SizedBox(height: 24),
+//                       Expanded(
+//                         child: InkWell(
+//                           onTap: () {
+//                             Navigator.of(context).push(MaterialPageRoute(builder: (context)=> Iphone14PlusOneScreen()));
+//                           },
+//                           child: Center(child: Image.asset('assets/images/map.png',),),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+//
+// // Function to build ride/package options
+// class OptionCard extends StatelessWidget {
+//   final String img;
+//   final String text;
+//   final Color color;
+//   final double size;
+//   final TextStyle textStyle;
+//   final VoidCallback onClick;
+//
+//   const OptionCard({
+//     Key? key,
+//     required this.onClick,
+//     required this.img,
+//     required this.text,
+//     this.color = Colors.black,
+//     this.size = 70.0,
+//     this.textStyle = const TextStyle(
+//       color: Colors.white,
+//       fontSize: 18.0,
+//       fontWeight: FontWeight.bold,
+//     ),
+//   }) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       children: [
+//         InkWell(
+//           onTap: onClick,
+//           child: Container(
+//             padding: const EdgeInsets.all(12),
+//             decoration: BoxDecoration(
+//               color: color, // Use the provided color
+//               borderRadius: BorderRadius.circular(10),
+//             ),
+//             child: Image.asset(
+//               img,
+//               width: size,
+//               height: size,
+//             ), // Use `img` variable
+//           ),
+//         ),
+//         const SizedBox(height: 5),
+//         Text(text, style: textStyle),
+//         // Use `text` and `textStyle`
+//       ],
+//     );
+//   }
+// }

@@ -1,0 +1,113 @@
+import 'package:flutter/material.dart';
+import 'package:left/features/auth/views/start_screen.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    Future.delayed(
+      const Duration(seconds: 4),
+      () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const StartScreen(),
+          ),
+        );
+      },
+    );
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth     = MediaQuery.of(context).size.width;
+    double screenHeight    = MediaQuery.of(context).size.height;
+    return SafeArea(
+      child: Scaffold(
+        body: Column(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter, // Start color position
+                    end: Alignment.bottomCenter, // End color position
+                    colors: [
+                      Color(0xff1976D2), // First color
+                      Color(0xff535AFF), // Second color
+                    ],
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: screenWidth * 0.45, // Adjust as needed
+                            height: screenHeight * 0.2, // Adjust as needed
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              // Rounded corners
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xff1976D2),
+                                  // First color
+                                  Color(0xff535AFF),
+                                  // End color (adjust as needed)
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  // Shadow on the bottom
+                                  color: Colors.white.withOpacity(0.2),
+                                  spreadRadius: 0, // Adjust as needed
+                                  blurRadius: 5, // Adjust as needed
+                                  offset: Offset(0, 3), // Positive y-offset for bottom side
+                                ),
+                                BoxShadow(
+                                  // Shadow on the right
+                                  color: Colors.black.withOpacity(0.2),
+                                  spreadRadius: 0, // Adjust as needed
+                                  blurRadius: 5, // Adjust as needed
+                                  offset: Offset(3, 0), // Positive x-offset for right side
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              // Center the text
+                              child: Text(
+                                'Left',
+                                style: TextStyle(
+                                  color: Colors.white, // Text color
+                                  fontSize: 64, // Adjust as needed
+                                  fontWeight:
+                                      FontWeight.w500, // Adjust as needed
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

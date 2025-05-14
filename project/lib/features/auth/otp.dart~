@@ -1,0 +1,258 @@
+import 'package:flutter/material.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:project/features/auth/services/otp_serivce.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/constants/my_colors.dart';
+
+class OtpScreen extends StatefulWidget {
+  final String email;
+  const OtpScreen({super.key, required this.email});
+
+  @override
+  State<OtpScreen> createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends State<OtpScreen> {
+  late TextEditingController otpController;
+  bool _isButtonEnabled = false;
+  bool _isLoading = false;
+  bool _isMounted = false;
+  final OtpService _otpService = OtpService();
+
+  @override
+  void initState() {
+    super.initState();
+    otpController = TextEditingController();
+    otpController.addListener(_validateInput);
+    _isMounted = true;
+  }
+
+  @override
+  void dispose() {
+    otpController.removeListener(_validateInput);
+    otpController.dispose();
+    _isMounted = false;
+    super.dispose();
+  }
+
+  void _validateInput() {
+    if (_isMounted) {
+      setState(() {
+        _isButtonEnabled = otpController.text.length == 6;
+      });
+    }
+  }
+
+  Future<void> _verifyOtp() async {
+    if (!_isButtonEnabled) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await _otpService.verifyOTP(widget.email, otpController.text);
+
+      if (response['message'] != 'OTP verified successfully') {
+        throw Exception('Failed to verify OTP');
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('pending_user_id');
+      final role = prefs.getString('pending_role');
+      final firstName = prefs.getString('pending_first_name');
+      final lastName = prefs.getString('pending_last_name');
+      final phone = prefs.getString('pending_phone');
+      final vehicleModel = prefs.getString('pending_vehicle_model');
+      final licensePlate = prefs.getString('pending_license_plate');
+      final pendingPassword = prefs.getString('pending_password');
+
+      print("User data: userId=$userId, role=$role, firstName=$firstName, lastName=$lastName, phone=$phone, password=$pendingPassword");
+
+      if (userId == null || role == null || firstName == null || lastName == null || phone == null) {
+        throw Exception('Missing user data for profile setup');
+      }
+
+      if (role == 'driver') {
+        await Supabase.instance.client.from('drivers').insert({
+          'user_id': userId,
+          'first_name': firstName,
+          'last_name': lastName,
+          'phone': phone,
+          'vehicle_model': vehicleModel,
+          'license_plate': licensePlate,
+        });
+      } else {
+        await Supabase.instance.client.from('riders').insert({
+          'user_id': userId,
+          'first_name': firstName,
+          'last_name': lastName,
+          'phone': phone,
+        });
+      }
+
+      // تسجيل الدخول
+      if (pendingPassword == null) {
+        throw Exception('Password not found in SharedPreferences');
+      }
+
+      final authResponse = await Supabase.instance.client.auth.signInWithPassword(
+        email: widget.email,
+        password: pendingPassword,
+      );
+
+      print("Auth response: ${authResponse.toString()}");
+
+      await prefs.clear();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('OTP verified! Profile created.')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen(role: role)),
+        );
+      }
+    } catch (error) {
+      print("Error during OTP verification: $error");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _resendOtp() async {
+    if (!_isMounted) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await _otpService.generateOTP(widget.email);
+
+      if (response['message'] != 'OTP generated and sent successfully') {
+        throw Exception(response['error'] ?? 'Failed to resend OTP');
+      }
+
+      otpController.clear();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('OTP resent! Check your email.')),
+        );
+      }
+    } catch (error) {
+      print("Error resending OTP: $error");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error resending OTP: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: MyColors.cSecondaryColor,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        elevation: 0,
+        backgroundColor: MyColors.cSecondaryColor,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+              const Text(
+                "Phone verification",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Enter your OTP code",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              const SizedBox(height: 20),
+              PinCodeTextField(
+                appContext: context,
+                length: 6,
+                keyboardType: TextInputType.number,
+                controller: otpController,
+                textStyle: const TextStyle(fontSize: 20),
+                pinTheme: PinTheme(
+                  shape: PinCodeFieldShape.box,
+                  borderRadius: BorderRadius.circular(8),
+                  fieldHeight: 50,
+                  fieldWidth: 50,
+                  activeFillColor: Colors.white,
+                  activeColor: Colors.green,
+                  inactiveColor: Colors.grey,
+                  selectedColor: Colors.black,
+                ),
+                animationType: AnimationType.fade,
+                animationDuration: const Duration(milliseconds: 300),
+                onChanged: (value) {},
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: _resendOtp,
+                child: const Text(
+                  "Resend again",
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isButtonEnabled && !_isLoading ? _verifyOtp : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                    "Verify",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  final String role;
+  const HomeScreen({super.key, required this.role});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Home')),
+      body: Center(child: Text('Welcome, $role!')),
+    );
+  }
+}
